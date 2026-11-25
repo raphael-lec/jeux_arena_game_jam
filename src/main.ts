@@ -1,4 +1,4 @@
-import {AUTO, Game, Scale, Types} from 'phaser';
+import {AUTO, Game, Input, Scale, Types} from 'phaser';
 import GameOverScene from "./scenes/GameOverScene.ts";
 import HomeScene from "./scenes/HomeScene.ts";
 import MainGameScene from './scenes/MainGameScene.ts';
@@ -14,6 +14,15 @@ const config: Types.Core.GameConfig = {
     height: 1920,
     parent: 'game-container',
     backgroundColor: '#000',
+    input: {
+        keyboard: {
+            capture: [
+                Input.Keyboard.KeyCodes.UP, Input.Keyboard.KeyCodes.DOWN,
+                Input.Keyboard.KeyCodes.LEFT, Input.Keyboard.KeyCodes.RIGHT,
+                Input.Keyboard.KeyCodes.SPACE
+            ]
+        }
+    },
     scale: {
         mode: Scale.FIT,
         autoCenter: Scale.CENTER_BOTH
