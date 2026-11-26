@@ -20,14 +20,14 @@ export default class Movement implements IComponent {
         if (!this.enabled)
             return;
 
-        entity.x += this._speed * deltaTime;
+        entity.x += this._speed * deltaTime * entity.timeScale;
     }
 
     public moveVertically(entity: Entity, deltaTime: number) {
         if (!this.enabled)
             return;
 
-        entity.y += this._speed * deltaTime;
+        entity.y += this._speed * deltaTime * entity.timeScale;
     }
 
     // direction must be normalized, or diagonals go faster
@@ -35,7 +35,7 @@ export default class Movement implements IComponent {
         if (!this.enabled)
             return;
 
-        entity.x += direction.x * this._speed * deltaTime;
-        entity.y += direction.y * this._speed * deltaTime;
+        entity.x += direction.x * this._speed * deltaTime * entity.timeScale;
+        entity.y += direction.y * this._speed * deltaTime * entity.timeScale;
     }
 }

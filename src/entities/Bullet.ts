@@ -1,13 +1,26 @@
 import {BulletData} from "../gameData/BulletData.ts";
 import GameConstants from "../GameConstants.ts";
+import ITimeScalable from "../components/ITimeScalable.ts";
 
-export default class Bullet extends Phaser.GameObjects.Rectangle {
+export default class Bullet extends Phaser.GameObjects.Rectangle implements ITimeScalable {
     private _arcadeBody: Phaser.Physics.Arcade.Body;
 
     private _damage: number = 0;
+    private readonly _baseVelocity: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
+    private _timeScale: number = 1;
 
     public get damage(): number {
         return this._damage;
+    }
+
+    public get timeScale(): number {
+        return this._timeScale;
+    }
+
+    // The velocity at normal speed is kept aside, and the body velocity is rescaled from it
+    public setTimeScale(scale: number): void {
+        this._timeScale = scale;
+        this._arcadeBody.setVelocity(this._baseVelocity.x * scale, this._baseVelocity.y * scale);
     }
 
     public init() {
@@ -28,7 +41,8 @@ export default class Bullet extends Phaser.GameObjects.Rectangle {
         this.setActive(true);
         this.setVisible(true);
 
-        this._arcadeBody.setVelocity(velocityX, velocityY);
+        this._baseVelocity.set(velocityX, velocityY);
+        this.setTimeScale(1);
         this._damage = data.damage;
 
         // Rotate the bullet to face the direction it's moving

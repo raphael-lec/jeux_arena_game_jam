@@ -96,8 +96,8 @@ export default class Player extends Entity {
         this.x = Phaser.Math.Clamp(this.x, this.displayWidth / 2, GameConstants.ARENA_WIDTH - this.displayWidth / 2);
         this.y = Phaser.Math.Clamp(this.y, this.displayHeight / 2, GameConstants.ARENA_HEIGHT - this.displayHeight / 2);
 
-        // Shoot automatically at the nearest enemy
-        if (timeSinceLaunch - this._lastShotTime > this._rateOfFire * 1000) {
+        // Shoot automatically at the nearest enemy. The fire rate follows the time scale
+        if (timeSinceLaunch - this._lastShotTime > this._rateOfFire * 1000 / this.timeScale) {
             const nearestTarget = this.findNearestTarget();
             if (nearestTarget) {
                 this._shootDirection.set(nearestTarget.x - this.x, nearestTarget.y - this.y).normalize();

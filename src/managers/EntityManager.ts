@@ -11,6 +11,12 @@ export default class EntityManager extends Plugins.ScenePlugin {
     public static readonly PLUGIN_KEY: string = 'EntityManager';
     public static readonly MAPPING_NAME: string = 'entityManager';
 
+    // Enemy spawn rate: the delay between two spawns shrinks as the game goes on
+    private static readonly SPAWN_DELAY_START: number = 500;     // ms, at the start of the game
+    private static readonly SPAWN_DELAY_MIN: number = 200;       // ms, the delay never goes below this
+    private static readonly SPAWN_DELAY_DECREASE: number = 2;    // ms removed from the delay each second
+    private static readonly MAX_ACTIVE_ENEMIES: number = 50;
+
     // noinspection JSUnusedGlobalSymbols
     private readonly bulletGroupConfig = {
         classType: Bullet,
@@ -26,6 +32,7 @@ export default class EntityManager extends Plugins.ScenePlugin {
     private _enemies: Physics.Arcade.Group;
     private _enemyBullets: Physics.Arcade.Group;
     private readonly _spawnOffset: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
+    private _gameStartTime: number = 0;
 
     constructor(scene: Scene, pluginManager: Plugins.PluginManager) {
         super(scene, pluginManager, EntityManager.PLUGIN_KEY);
@@ -68,13 +75,10 @@ export default class EntityManager extends Plugins.ScenePlugin {
 
         this._player.setTargets(this._enemies);
 
-        // Spawn enemies indefinitely
-        this.scene!.time.addEvent({
-            delay: 500,
-            callback: this.spawnEnemy,
-            callbackScope: this,
-            loop: true
-        });
+        // Spawn enemies indefinitely, faster and faster. Called on every (re)start of the game scene,
+        // so the spawn rate is reset at the end of each game
+        this._gameStartTime = this.scene!.time.now;
+        this.scheduleNextSpawn();
 
         console.log("[EntityManager] Enemies initialized");
 
@@ -114,8 +118,21 @@ export default class EntityManager extends Plugins.ScenePlugin {
         console.log("[EntityManager] Group collisions initialized");
     }
 
+    private scheduleNextSpawn() {
+        const elapsedSeconds: number = (this.scene!.time.now - this._gameStartTime) / 1000;
+        const delay: number = Math.max(EntityManager.SPAWN_DELAY_MIN,
+            EntityManager.SPAWN_DELAY_START - elapsedSeconds * EntityManager.SPAWN_DELAY_DECREASE);
+
+        // One-shot timers instead of a loop: the delay is recomputed each time.
+        // The scene clock removes pending timers when the scene stops or restarts
+        this.scene!.time.delayedCall(delay, () => {
+            this.spawnEnemy();
+            this.scheduleNextSpawn();
+        });
+    }
+
     private spawnEnemy() {
-        if (this._enemies.countActive(true) >= 50) {
+        if (this._enemies.countActive(true) >= EntityManager.MAX_ACTIVE_ENEMIES) {
             return;
         }
 

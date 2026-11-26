@@ -2,6 +2,7 @@ export default class GameConstants {
     public static readonly Events = Object.freeze({
         PLAYER_SPAWNED_EVENT: "playerSpawned",
         ENEMY_SPAWNED_EVENT: "enemySpawned",
+        ASTEROID_BELT_STARTED_EVENT: "asteroidBeltStarted",
     } as const);
 
     public static readonly SceneKeys = Object.freeze({
@@ -16,4 +17,8 @@ export default class GameConstants {
     // Small enough for the planet, at the center, to stay visible from the arena corners
     public static readonly ARENA_WIDTH: number = 3400;
     public static readonly ARENA_HEIGHT: number = 4700;
+
+    // Asteroid textures (one image each): asteroid0, asteroid1, ... asteroid9
+    public static readonly ASTEROID_TEXTURE_PREFIX: string = "asteroid";
+    public static readonly ASTEROID_TEXTURE_COUNT: number = 10;
 }

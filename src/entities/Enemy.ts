@@ -75,6 +75,8 @@ export default class Enemy extends Entity {
 
     public enable(x: number, y: number) {
         this.enableBody(true, x, y, true, true);
+        // Pooled enemy: it may have been killed while slowed down or accelerated
+        this.setTimeScale(1);
         this._shootTimer?.reset(this._shootTimerConfig);
 
         // Restore health, in case the enemy is reused from the pool, without emitting events
