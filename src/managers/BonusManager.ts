@@ -73,8 +73,9 @@ export default class BonusManager extends Plugins.ScenePlugin {
         console.log("[BonusManager] Bonuses initialized");
     }
 
-    public spawnBonus() {
-        const type: BonusType = Phaser.Utils.Array.GetRandom(BONUS_TYPES as BonusType[]);
+    // Without argument, the type is random. The argument is used by the dev cheat keys
+    public spawnBonus(forcedType?: BonusType) {
+        const type: BonusType = forcedType ?? Phaser.Utils.Array.GetRandom(BONUS_TYPES as BonusType[]);
 
         const margin: number = BonusManager.BONUS_DISPLAY_SIZE;
         const offset: Phaser.Math.Vector2 = Phaser.Math.RandomXY(new Phaser.Math.Vector2(),

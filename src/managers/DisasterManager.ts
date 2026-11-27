@@ -1,10 +1,14 @@
 import {Plugins, Physics, Scene} from "phaser";
 import type {AsteroidBeltData} from "../gameData/AsteroidBeltData.ts";
 import type {TimeFieldData} from "../gameData/TimeFieldData.ts";
+import type {BlackHoleData} from "../gameData/BlackHoleData.ts";
+import type {SolarFlareData} from "../gameData/SolarFlareData.ts";
 import type ITimeScalable from "../components/ITimeScalable.ts";
 import Asteroid from "../entities/Asteroid.ts";
 import Player from "../entities/Player.ts";
 import Enemy from "../entities/Enemy.ts";
+import BlackHole from "../entities/BlackHole.ts";
+import SolarFlare from "../entities/SolarFlare.ts";
 import Health from "../components/Health.ts";
 import GroupUtils from "../utils/GroupUtils.ts";
 import GameConstants from "../GameConstants.ts";
@@ -32,7 +36,7 @@ export default class DisasterManager extends Plugins.ScenePlugin {
     private readonly _asteroidBeltData: AsteroidBeltData = {
         count: 60,
         batchSize: 3,
-        duration: 8000,
+        duration: 16000,
         bandWidth: 1000,
         spawnMargin: 400,
         spawnDepth: 300,
@@ -54,11 +58,34 @@ export default class DisasterManager extends Plugins.ScenePlugin {
         maxDistanceFromPlayer: 700,
     };
 
+    private readonly _blackHoleData: BlackHoleData = {
+        duration: 15000,
+        spawnDuration: 1500,
+        startSize: 200,
+        endSize: 900,
+        killRadiusRatio: 0.12,
+        pullRadiusRatio: 2.5,
+        maxPullSpeed: 0.6,
+        minDistanceFromPlayer: 500,
+        maxDistanceFromPlayer: 900,
+    };
+
+    private readonly _solarFlareData: SolarFlareData = {
+        warningDuration: 2500,
+        speed: 1000,
+        bandWidth: 1000,
+        thickness: 700,
+        hitThickness: 250,
+        damage: 1,
+    };
+
     private _player: Player;
     private _timeFieldActive: boolean = false;
     private _asteroids: Physics.Arcade.Group;
     private _nextPlayerHitTime: number = 0;
     private _disasterStartTime: number = 0;
+    private _enemies: Physics.Arcade.Group;
+    private _blackHole: BlackHole | undefined;
 
     constructor(scene: Scene, pluginManager: Plugins.PluginManager) {
         super(scene, pluginManager, DisasterManager.PLUGIN_KEY);
@@ -81,6 +108,8 @@ export default class DisasterManager extends Plugins.ScenePlugin {
         GroupUtils.populate(64, this._asteroids);
         this._nextPlayerHitTime = 0;
         this._player = player;
+        this._enemies = enemies;
+        this._blackHole = undefined;
         this._timeFieldActive = false;
 
         // Overlap, not collider: asteroids never get pushed around
@@ -89,17 +118,8 @@ export default class DisasterManager extends Plugins.ScenePlugin {
             enemyHealth?.damage(enemyHealth.max);
         });
 
-        this.scene!.physics.add.overlap(player, this._asteroids, (playerObj, asteroidObj) => {
-            // Overlap fires every frame while touching: without a cooldown the player would die instantly
-            if (this.scene!.time.now < this._nextPlayerHitTime)
-                return;
-            this._nextPlayerHitTime = this.scene!.time.now + DisasterManager.PLAYER_HIT_COOLDOWN;
-
-            (playerObj as Player).getComponent(Health)?.damage((asteroidObj as Asteroid).damage);
-
-            this.scene!.cameras.main.shake(150, 0.02);
-            // Blink during the cooldown (5 x 200ms) so the player sees they are protected
-            this.scene!.tweens.add({targets: playerObj, alpha: 0.3, duration: 100, yoyo: true, repeat: 4});
+        this.scene!.physics.add.overlap(player, this._asteroids, (_playerObj, asteroidObj) => {
+            this.damagePlayer((asteroidObj as Asteroid).damage);
         });
 
         // Spawn rate ramps up over time. initDisasters runs on every (re)start of the scene,
@@ -108,6 +128,20 @@ export default class DisasterManager extends Plugins.ScenePlugin {
         this.scheduleNextDisaster();
 
         console.log("[DisasterManager] Disasters initialized");
+    }
+
+    // Damage from asteroids and solar flares, sharing the same protection time
+    private damagePlayer(amount: number) {
+        // Overlaps fire every frame while touching: without a cooldown the player would die instantly
+        if (this.scene!.time.now < this._nextPlayerHitTime)
+            return;
+        this._nextPlayerHitTime = this.scene!.time.now + DisasterManager.PLAYER_HIT_COOLDOWN;
+
+        this._player.getComponent(Health)?.damage(amount);
+
+        this.scene!.cameras.main.shake(150, 0.02);
+        // Blink during the cooldown (5 x 200ms) so the player sees they are protected
+        this.scene!.tweens.add({targets: this._player, alpha: 0.3, duration: 100, yoyo: true, repeat: 4});
     }
 
     private scheduleNextDisaster() {
@@ -125,10 +159,20 @@ export default class DisasterManager extends Plugins.ScenePlugin {
     }
 
     private startRandomDisaster() {
-        if (Phaser.Math.Between(0, 1) === 0)
-            this.startAsteroidBelt();
-        else
-            this.startTimeField();
+        switch (Phaser.Math.Between(0, 3)) {
+            case 0:
+                this.startAsteroidBelt();
+                break;
+            case 1:
+                this.startTimeField();
+                break;
+            case 2:
+                this.startBlackHole();
+                break;
+            default:
+                this.startSolarFlare();
+                break;
+        }
     }
 
     public startAsteroidBelt() {
@@ -161,14 +205,15 @@ export default class DisasterManager extends Plugins.ScenePlugin {
     }
 
     // A zone that slows down or accelerates everything inside it: player, enemies, bullets and asteroids
-    public startTimeField() {
+    // Without argument, the type is random. The argument is used by the dev cheat keys
+    public startTimeField(forcedType?: 'slow' | 'fast') {
         // One field at a time
         if (this._timeFieldActive)
             return;
         this._timeFieldActive = true;
 
         const data: TimeFieldData = this._timeFieldData;
-        const isSlow: boolean = Phaser.Math.Between(0, 1) === 0;
+        const isSlow: boolean = forcedType ? forcedType === 'slow' : Phaser.Math.Between(0, 1) === 0;
         const scale: number = isSlow ? data.slowScale : data.fastScale;
 
         // Appear around the player, or it would most likely be somewhere on the arena the camera never shows
@@ -225,6 +270,45 @@ export default class DisasterManager extends Plugins.ScenePlugin {
         });
 
         console.log("[DisasterManager] Time field started", isSlow ? "(slow)" : "(fast)");
+    }
+
+    // A wall of fire crossing the whole arena along a band. The path is shown first (warning phase)
+    public startSolarFlare() {
+        const data: SolarFlareData = this._solarFlareData;
+        const direction = Phaser.Utils.Array.GetRandom(BELT_DIRECTIONS as { x: number, y: number }[]);
+
+        // The band is placed along the axis perpendicular to the direction, and kept inside the arena
+        const crossLength: number = direction.x !== 0 ? GameConstants.ARENA_HEIGHT : GameConstants.ARENA_WIDTH;
+        const bandWidth: number = Math.min(data.bandWidth, crossLength);
+        const bandStart: number = Phaser.Math.Between(0, crossLength - bandWidth);
+
+        // The flare adds itself to the scene and destroys itself once it has crossed the arena
+        new SolarFlare(this.scene!, data, direction, bandStart, bandWidth, this._player, this._enemies,
+            (damage: number) => this.damagePlayer(damage));
+
+        console.log("[DisasterManager] Solar flare started", direction);
+    }
+
+    // A black hole that slowly grows, pulls the player and the enemies towards it and kills what touches its core
+    public startBlackHole() {
+        // One black hole at a time
+        if (this._blackHole?.active)
+            return;
+
+        const data: BlackHoleData = this._blackHoleData;
+
+        // Appear around the player, or it would most likely be somewhere on the arena the camera never shows.
+        // Kept far enough from the arena borders for its final size
+        const margin: number = data.endSize / 2;
+        const offset: Phaser.Math.Vector2 = Phaser.Math.RandomXY(new Phaser.Math.Vector2(),
+            Phaser.Math.FloatBetween(data.minDistanceFromPlayer, data.maxDistanceFromPlayer));
+        const x: number = Phaser.Math.Clamp(this._player.x + offset.x, margin, GameConstants.ARENA_WIDTH - margin);
+        const y: number = Phaser.Math.Clamp(this._player.y + offset.y, margin, GameConstants.ARENA_HEIGHT - margin);
+
+        this._blackHole = new BlackHole(this.scene!, x, y, data, this._player, this._enemies);
+        this._blackHole.start();
+
+        console.log("[DisasterManager] Black hole started");
     }
 
     // Objects inside the circle get insideScale, all the others get back to normal speed

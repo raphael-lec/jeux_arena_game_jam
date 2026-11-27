@@ -57,13 +57,29 @@ export default class MainGameScene extends Scene {
 
         if (this.input.keyboard) {
             this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R).on('down', () => this.scene.restart());
-            // Temporary test keys: B = asteroid belt, N = time field, V = bonus
+            // Temporary test keys: B = asteroid belt, N = random time field, S = slow time field,
+            // F = fast time field, T = black hole, E = solar flare,
+            // V = random bonus, K = kill_all, H = heal, A = ammospeed
             this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B)
                 .on('down', () => this.disasterManager.startAsteroidBelt());
             this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N)
                 .on('down', () => this.disasterManager.startTimeField());
+            this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S)
+                .on('down', () => this.disasterManager.startTimeField('slow'));
+            this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F)
+                .on('down', () => this.disasterManager.startTimeField('fast'));
+            this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T)
+                .on('down', () => this.disasterManager.startBlackHole());
+            this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E)
+                .on('down', () => this.disasterManager.startSolarFlare());
             this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.V)
                 .on('down', () => this.bonusManager.spawnBonus());
+            this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K)
+                .on('down', () => this.bonusManager.spawnBonus('kill_all'));
+            this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H)
+                .on('down', () => this.bonusManager.spawnBonus('heal'));
+            this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A)
+                .on('down', () => this.bonusManager.spawnBonus('ammospeed'));
         } else {
             console.error('No keyboard input');
         }

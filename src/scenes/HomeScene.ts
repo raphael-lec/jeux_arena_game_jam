@@ -1,5 +1,6 @@
 import {Loader} from "phaser";
 import GameConstants from "../GameConstants.ts";
+import BlackHole from "../entities/BlackHole.ts";
 
 export default class HomeScene extends Phaser.Scene {
     constructor() {
@@ -45,6 +46,11 @@ export default class HomeScene extends Phaser.Scene {
         this.load.image('bonus_kill_all', 'Bonus/kill_all.png');
         this.load.image('bonus_heal', 'Bonus/heal.png');
         this.load.image('bonus_ammospeed', 'Bonus/ammospeed.png');
+        // Black hole: 3 growth stages, texture key is 'blackhole_' + stage (cf. BlackHole)
+        for (let i: number = 0; i < BlackHole.TEXTURE_COUNT; i++) {
+            const key: string = BlackHole.TEXTURE_PREFIX + i;
+            this.load.image(key, 'BlackHoles/' + key + '.png');
+        }
         this.load.bitmapFont('future-bmp', 'Fonts/kenvector_future.png', 'Fonts/kenvector_future.xml');
         this.load.font('future', 'Fonts/kenvector_future.ttf');
         this.load.json('playerShips', 'Data/playerShips.json');
