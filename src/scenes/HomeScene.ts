@@ -3,10 +3,14 @@ import GameConstants from "../GameConstants.ts";
 import BlackHole from "../entities/BlackHole.ts";
 import SolarFlare from "../entities/SolarFlare.ts";
 import UIButton from "../utils/UIButton.ts";
+import SaveManager from "../managers/SaveManager.ts";
+import SaveConstants from "../SaveConstants.ts";
 
 export default class HomeScene extends Phaser.Scene {
     // Avoids launching the game twice (SPACE and a click in the same frame)
     private _starting: boolean = false;
+    // Injected by the SaveManager global plugin (cf. main.ts)
+    private saveManager: SaveManager;
 
     constructor() {
         super(GameConstants.SceneKeys.HOME);
@@ -74,6 +78,12 @@ export default class HomeScene extends Phaser.Scene {
 
     create() {
         this._starting = false;
+
+        // The coins are saved: load them before showing them
+        this.saveManager?.load();
+        const coins: number = Number(this.saveManager?.getData(SaveConstants.Keys.PLAYER_COINS) ?? 0);
+        this.add.text(this.scale.width - 64, 64, 'PIÈCES : ' + coins,
+            {fontSize: '48px', color: '#ffe066'}).setOrigin(1, 0);
 
         const centerX: number = this.scale.width / 2;
         const height: number = this.scale.height;

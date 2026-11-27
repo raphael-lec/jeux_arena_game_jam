@@ -101,6 +101,11 @@ export default class MainGameScene extends Scene {
             console.log("New Best Score: " + currentScore);
         }
 
+        // The score of the game is added to the coins (saved)
+        const coins: number = Number(this.saveManager.getData(SaveConstants.Keys.PLAYER_COINS) ?? 0);
+        this.saveManager.setData(SaveConstants.Keys.PLAYER_COINS, coins + currentScore);
+        console.log("Coins: " + coins + " + " + currentScore);
+
         this.scene.start(GameConstants.SceneKeys.GAME_OVER);
     }
 }
