@@ -5,12 +5,14 @@ import SaveManager from "../managers/SaveManager.ts";
 import SaveConstants from "../SaveConstants.ts";
 import EntityManager from "../managers/EntityManager.ts";
 import DisasterManager from "../managers/DisasterManager.ts";
+import BonusManager from "../managers/BonusManager.ts";
 import GameConstants from "../GameConstants.ts";
 
 export default class MainGameScene extends Scene {
     private saveManager: SaveManager;
     private entityManager: EntityManager;
     private disasterManager: DisasterManager;
+    private bonusManager: BonusManager;
 
     constructor() {
         super(GameConstants.SceneKeys.MAIN_GAME);
@@ -36,6 +38,9 @@ export default class MainGameScene extends Scene {
         if (!this.disasterManager) {
             console.error('DisasterManager plugin not found');
         }
+        if (!this.bonusManager) {
+            console.error('BonusManager plugin not found');
+        }
 
         const player = this.entityManager.initAndSpawnPlayer();
         player.getComponent(Health)?.once(Health.DEATH_EVENT, () => {
@@ -48,14 +53,17 @@ export default class MainGameScene extends Scene {
         const enemies = this.entityManager.initEnemies();
         this.entityManager.initGroupCollisions();
         this.disasterManager.initDisasters(player, enemies);
+        this.bonusManager.initBonuses(player, enemies);
 
         if (this.input.keyboard) {
             this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R).on('down', () => this.scene.restart());
-            // Temporary test keys: B = asteroid belt, N = time field
+            // Temporary test keys: B = asteroid belt, N = time field, V = bonus
             this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B)
                 .on('down', () => this.disasterManager.startAsteroidBelt());
             this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N)
                 .on('down', () => this.disasterManager.startTimeField());
+            this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.V)
+                .on('down', () => this.bonusManager.spawnBonus());
         } else {
             console.error('No keyboard input');
         }

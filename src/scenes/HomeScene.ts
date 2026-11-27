@@ -41,6 +41,10 @@ export default class HomeScene extends Phaser.Scene {
             this.load.image('timefield_' + type, 'TimeFields/timefield_' + type + '.png');
             this.load.image('timefield_icon_' + type, 'TimeFields/timefield_icon_' + type + '.png');
         }
+        // Bonuses: texture key is 'bonus_' + type (cf. BonusManager)
+        this.load.image('bonus_kill_all', 'Bonus/kill_all.png');
+        this.load.image('bonus_heal', 'Bonus/heal.png');
+        this.load.image('bonus_ammospeed', 'Bonus/ammospeed.png');
         this.load.bitmapFont('future-bmp', 'Fonts/kenvector_future.png', 'Fonts/kenvector_future.xml');
         this.load.font('future', 'Fonts/kenvector_future.ttf');
         this.load.json('playerShips', 'Data/playerShips.json');

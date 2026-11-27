@@ -18,8 +18,11 @@ export default class DisasterManager extends Plugins.ScenePlugin {
     public static readonly PLUGIN_KEY: string = 'DisasterManager';
     public static readonly MAPPING_NAME: string = 'disasterManager';
 
-    // Delay (ms) between two automatic disasters
-    private static readonly DISASTER_INTERVAL: number = 30000;
+    // Delay (ms) between two automatic disasters: shrinks linearly from START to MIN
+    // over RAMP_DURATION, then stays at MIN
+    private static readonly DISASTER_INTERVAL_START: number = 30000;
+    private static readonly DISASTER_INTERVAL_MIN: number = 10000;
+    private static readonly DISASTER_RAMP_DURATION: number = 180000; // 3 min
     // The player can't be hit by asteroids again during this time (ms)
     private static readonly PLAYER_HIT_COOLDOWN: number = 1000;
     // Texture keys: 'timefield_slow', 'timefield_icon_slow', 'timefield_fast', 'timefield_icon_fast'
@@ -55,6 +58,7 @@ export default class DisasterManager extends Plugins.ScenePlugin {
     private _timeFieldActive: boolean = false;
     private _asteroids: Physics.Arcade.Group;
     private _nextPlayerHitTime: number = 0;
+    private _disasterStartTime: number = 0;
 
     constructor(scene: Scene, pluginManager: Plugins.PluginManager) {
         super(scene, pluginManager, DisasterManager.PLUGIN_KEY);
@@ -98,14 +102,26 @@ export default class DisasterManager extends Plugins.ScenePlugin {
             this.scene!.tweens.add({targets: playerObj, alpha: 0.3, duration: 100, yoyo: true, repeat: 4});
         });
 
-        this.scene!.time.addEvent({
-            delay: DisasterManager.DISASTER_INTERVAL,
-            callback: this.startRandomDisaster,
-            callbackScope: this,
-            loop: true
-        });
+        // Spawn rate ramps up over time. initDisasters runs on every (re)start of the scene,
+        // so the ramp is reset at the end of each game
+        this._disasterStartTime = this.scene!.time.now;
+        this.scheduleNextDisaster();
 
         console.log("[DisasterManager] Disasters initialized");
+    }
+
+    private scheduleNextDisaster() {
+        const elapsed: number = this.scene!.time.now - this._disasterStartTime;
+        const progress: number = Phaser.Math.Clamp(elapsed / DisasterManager.DISASTER_RAMP_DURATION, 0, 1);
+        const delay: number = Phaser.Math.Linear(
+            DisasterManager.DISASTER_INTERVAL_START, DisasterManager.DISASTER_INTERVAL_MIN, progress);
+
+        // One-shot timers instead of a loop: the delay is recomputed each time.
+        // The scene clock removes pending timers when the scene stops or restarts
+        this.scene!.time.delayedCall(delay, () => {
+            this.startRandomDisaster();
+            this.scheduleNextDisaster();
+        });
     }
 
     private startRandomDisaster() {

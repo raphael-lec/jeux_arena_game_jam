@@ -5,6 +5,7 @@ import MainGameScene from './scenes/MainGameScene.ts';
 import MainUIScene from "./scenes/MainUIScene.ts";
 import EntityManager from "./managers/EntityManager.ts";
 import DisasterManager from "./managers/DisasterManager.ts";
+import BonusManager from "./managers/BonusManager.ts";
 import SaveManager from "./managers/SaveManager.ts";
 
 // Find out more information about the Game Config at:
@@ -40,7 +41,8 @@ const config: Types.Core.GameConfig = {
         ],
         scene: [
             {key: EntityManager.PLUGIN_KEY, plugin: EntityManager, mapping: EntityManager.MAPPING_NAME},
-            {key: DisasterManager.PLUGIN_KEY, plugin: DisasterManager, mapping: DisasterManager.MAPPING_NAME}
+            {key: DisasterManager.PLUGIN_KEY, plugin: DisasterManager, mapping: DisasterManager.MAPPING_NAME},
+            {key: BonusManager.PLUGIN_KEY, plugin: BonusManager, mapping: BonusManager.MAPPING_NAME}
         ]
     },
     // fps: { forceSetTimeOut: true, target: 120 },

@@ -19,6 +19,8 @@ export default class Player extends Entity {
     private readonly _cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
     private _playerShipData: PlayerShipData;
     private _rateOfFire: number;
+    // 1 = normal fire rate, 2 = twice as many shots per second (ammospeed bonus)
+    private _fireRateMultiplier: number = 1;
     private _lastShotTime: number;
     private readonly _moveDirection: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
     private readonly _shootDirection: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
@@ -70,6 +72,10 @@ export default class Player extends Entity {
         this.getComponent(Movement)?.setSpeed(this._playerShipData.movementSpeed);
     }
 
+    public setFireRateMultiplier(multiplier: number) {
+        this._fireRateMultiplier = multiplier;
+    }
+
     preUpdate(timeSinceLaunch: number, deltaTime: number) {
         super.preUpdate(timeSinceLaunch, deltaTime);
 
@@ -96,8 +102,8 @@ export default class Player extends Entity {
         this.x = Phaser.Math.Clamp(this.x, this.displayWidth / 2, GameConstants.ARENA_WIDTH - this.displayWidth / 2);
         this.y = Phaser.Math.Clamp(this.y, this.displayHeight / 2, GameConstants.ARENA_HEIGHT - this.displayHeight / 2);
 
-        // Shoot automatically at the nearest enemy. The fire rate follows the time scale
-        if (timeSinceLaunch - this._lastShotTime > this._rateOfFire * 1000 / this.timeScale) {
+        // Shoot automatically at the nearest enemy. The fire rate follows the time scale and the fire rate bonus
+        if (timeSinceLaunch - this._lastShotTime > this._rateOfFire * 1000 / (this.timeScale * this._fireRateMultiplier)) {
             const nearestTarget = this.findNearestTarget();
             if (nearestTarget) {
                 this._shootDirection.set(nearestTarget.x - this.x, nearestTarget.y - this.y).normalize();
