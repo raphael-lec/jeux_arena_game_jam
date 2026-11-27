@@ -91,7 +91,7 @@ export default class DisasterManager extends Plugins.ScenePlugin {
     private readonly _cryogenicData: CryogenicData = {
         duration: 10000,
         fadeDuration: 1000,
-        playerTimeScale: 0.5,
+        playerTimeScale: 0.2,
         enemyTimeScale: 0.9,
     };
 
