@@ -16,14 +16,20 @@ export default class Player extends Entity {
         damage: 1
     };
 
+    // Triple shot bonus: angle (deg) between the central bullet and each side bullet
+    private static readonly TRIPLE_SHOT_ANGLE: number = 20;
+
     private readonly _cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
     private _playerShipData: PlayerShipData;
     private _rateOfFire: number;
     // 1 = normal fire rate, 2 = twice as many shots per second (ammospeed bonus)
     private _fireRateMultiplier: number = 1;
+    // Triple shot bonus: two more bullets, tilted on each side of the aim direction
+    private _tripleShot: boolean = false;
     private _lastShotTime: number;
     private readonly _moveDirection: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
     private readonly _shootDirection: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
+    private readonly _spreadDirection: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
     private _targets: Phaser.Physics.Arcade.Group;
 
     constructor(scene: Scene, x: number, y: number) {
@@ -76,6 +82,10 @@ export default class Player extends Entity {
         this._fireRateMultiplier = multiplier;
     }
 
+    public setTripleShot(enabled: boolean) {
+        this._tripleShot = enabled;
+    }
+
     preUpdate(timeSinceLaunch: number, deltaTime: number) {
         super.preUpdate(timeSinceLaunch, deltaTime);
 
@@ -107,7 +117,17 @@ export default class Player extends Entity {
             const nearestTarget = this.findNearestTarget();
             if (nearestTarget) {
                 this._shootDirection.set(nearestTarget.x - this.x, nearestTarget.y - this.y).normalize();
-                this.getComponent(Weapon)?.shoot(this, this._shootDirection);
+                const weapon = this.getComponent(Weapon);
+                weapon?.shoot(this, this._shootDirection);
+
+                // Triple shot bonus: one more bullet on each side
+                if (this._tripleShot) {
+                    for (const side of [-1, 1]) {
+                        this._spreadDirection.copy(this._shootDirection)
+                            .rotate(side * Phaser.Math.DegToRad(Player.TRIPLE_SHOT_ANGLE));
+                        weapon?.shoot(this, this._spreadDirection);
+                    }
+                }
                 this.scene.sound.play('sfx_laser1');
 
                 this._lastShotTime = timeSinceLaunch;

@@ -5,9 +5,9 @@ import Health from "../components/Health.ts";
 import GameConstants from "../GameConstants.ts";
 
 // Add a new bonus here, load its texture ('bonus_<type>') in HomeScene and handle it in applyBonus
-type BonusType = 'kill_all' | 'heal' | 'ammospeed';
+type BonusType = 'kill_all' | 'heal' | 'ammospeed' | 'triple_shot';
 
-const BONUS_TYPES: readonly BonusType[] = ['kill_all', 'heal', 'ammospeed'];
+const BONUS_TYPES: readonly BonusType[] = ['kill_all', 'heal', 'ammospeed', 'triple_shot'];
 
 export default class BonusManager extends Plugins.ScenePlugin {
     public static readonly PLUGIN_KEY: string = 'BonusManager';
@@ -25,6 +25,8 @@ export default class BonusManager extends Plugins.ScenePlugin {
     // 'ammospeed' bonus: the player's fire rate is multiplied for this duration (ms)
     private static readonly AMMO_SPEED_MULTIPLIER: number = 2;
     private static readonly AMMO_SPEED_DURATION: number = 15000;
+    // 'triple_shot' bonus: the player shoots in 3 directions for this duration (ms)
+    private static readonly TRIPLE_SHOT_DURATION: number = 15000;
     // 'kill_all' bonus: a shockwave spreads from the player at this speed (px/s) up to this radius (px).
     // The radius must cover every enemy: they spawn just outside the camera view
     private static readonly SHOCKWAVE_SPEED: number = 2000;
@@ -34,6 +36,7 @@ export default class BonusManager extends Plugins.ScenePlugin {
     private _enemies: Physics.Arcade.Group;
     private _bonuses: Physics.Arcade.Group;
     private _ammoSpeedTimer: Phaser.Time.TimerEvent | undefined;
+    private _tripleShotTimer: Phaser.Time.TimerEvent | undefined;
 
     constructor(scene: Scene, pluginManager: Plugins.PluginManager) {
         super(scene, pluginManager, BonusManager.PLUGIN_KEY);
@@ -52,6 +55,7 @@ export default class BonusManager extends Plugins.ScenePlugin {
         this._enemies = enemies;
         this._bonuses = this.scene!.physics.add.group();
         this._ammoSpeedTimer = undefined;
+        this._tripleShotTimer = undefined;
 
         this.scene!.physics.add.overlap(player, this._bonuses, (_player, bonusObj) => {
             const bonus = bonusObj as Physics.Arcade.Sprite;
@@ -108,6 +112,9 @@ export default class BonusManager extends Plugins.ScenePlugin {
             case 'ammospeed':
                 this.boostFireRate();
                 break;
+            case 'triple_shot':
+                this.boostTripleShot();
+                break;
         }
 
         console.log("[BonusManager] Bonus picked up", type);
@@ -129,6 +136,18 @@ export default class BonusManager extends Plugins.ScenePlugin {
         this._ammoSpeedTimer = this.scene!.time.delayedCall(BonusManager.AMMO_SPEED_DURATION, () => {
             this._player.setFireRateMultiplier(1);
             this._ammoSpeedTimer = undefined;
+        });
+    }
+
+    // The player shoots in 3 directions for a while. Picking it up again only restarts the duration
+    private boostTripleShot() {
+        this.scene!.cameras.main.flash(300, 200, 120, 255);
+
+        this._player.setTripleShot(true);
+        this._tripleShotTimer?.remove();
+        this._tripleShotTimer = this.scene!.time.delayedCall(BonusManager.TRIPLE_SHOT_DURATION, () => {
+            this._player.setTripleShot(false);
+            this._tripleShotTimer = undefined;
         });
     }
 

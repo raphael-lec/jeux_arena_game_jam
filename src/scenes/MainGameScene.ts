@@ -58,8 +58,8 @@ export default class MainGameScene extends Scene {
         if (this.input.keyboard) {
             this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R).on('down', () => this.scene.restart());
             // Temporary test keys: B = asteroid belt, N = random time field, S = slow time field,
-            // F = fast time field, T = black hole, E = solar flare,
-            // V = random bonus, K = kill_all, H = heal, A = ammospeed
+            // F = fast time field, T = black hole, E = solar flare, C = cryogenic,
+            // V = random bonus, K = kill_all, H = heal, A = ammospeed, M = triple_shot
             this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B)
                 .on('down', () => this.disasterManager.startAsteroidBelt());
             this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N)
@@ -80,6 +80,10 @@ export default class MainGameScene extends Scene {
                 .on('down', () => this.bonusManager.spawnBonus('heal'));
             this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A)
                 .on('down', () => this.bonusManager.spawnBonus('ammospeed'));
+            this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C)
+                .on('down', () => this.disasterManager.startCryogenic());
+            this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M)
+                .on('down', () => this.bonusManager.spawnBonus('triple_shot'));
         } else {
             console.error('No keyboard input');
         }
