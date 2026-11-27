@@ -1,0 +1,19 @@
+{
+  "name": "coda-shmup-slides",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Slides du cours Coda Shmup (Phaser 3 + TypeScript), Slidev",
+  "type": "module",
+  "scripts": {
+    "dev": "slidev slides.md",
+    "build": "slidev build slides.md",
+    "export:pdf": "slidev export slides.md --format pdf --wait 1500 --output slides-export.pdf"
+  },
+  "devDependencies": {
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@slidev/cli": "^53.1.0",
+    "@slidev/theme-default": "^0.25.0",
+    "playwright-chromium": "^1.65.1"
+  }
+}
