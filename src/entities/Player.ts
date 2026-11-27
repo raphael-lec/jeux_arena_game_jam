@@ -20,7 +20,6 @@ export default class Player extends Entity {
     private static readonly TRIPLE_SHOT_ANGLE: number = 20;
 
     private readonly _cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
-    private _playerShipData: PlayerShipData;
     // Added to the heading: 0 for a sprite that faces right, Math.PI / 2 for one that faces up
     private _rotationOffset: number = 0;
     private _rateOfFire: number;
@@ -73,7 +72,6 @@ export default class Player extends Entity {
     public selectPlayerShip(playerShipDataId: number) {
         const playerShipsData = this.scene.cache.json.get('playerShips') as PlayerShipsData;
         const data: PlayerShipData = playerShipsData[playerShipDataId];
-        this._playerShipData = data;
 
         // Keep the current heading when the rotation offset changes
         const heading: number = this.rotation - this._rotationOffset;
