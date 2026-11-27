@@ -35,6 +35,8 @@ export default class HomeScene extends Phaser.Scene {
         this.load.image('bg', 'Backgrounds/darkPurple.png');
         this.load.image('planet', 'Planets/planet00.png');
         this.load.atlas('sprites', 'Spritesheet/gameSprites.png', 'Spritesheet/gameSprites.json');
+        // Enemies atlas: enemy0 ... enemy9 (cf. EnemyTypes)
+        this.load.atlas('enemies', 'Spritesheet/enemysprite.png', 'Spritesheet/enemies.json');
         for (let i: number = 0; i < GameConstants.ASTEROID_TEXTURE_COUNT; i++) {
             const key: string = GameConstants.ASTEROID_TEXTURE_PREFIX + i;
             this.load.image(key, 'Asteroids/' + key + '.png');
