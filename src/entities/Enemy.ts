@@ -19,6 +19,10 @@ export default class Enemy extends Entity {
     private _strafeSide: number = 1;
     // Enemies spawn outside the camera view, maybe outside the arena: they are only kept inside it after entering
     private _hasEntered: boolean = false;
+    // Display scale of the current type: the "inflation" before a shot is relative to it
+    private _baseScale: number = 1;
+    // Radius of the circle body in unscaled texture pixels (Arcade does not scale a circle radius with the sprite)
+    private _bodyRadius: number = 0;
 
     public get enemyType(): EnemyData | undefined {
         return this._type;
@@ -74,7 +78,10 @@ export default class Enemy extends Entity {
         this.enableBody(true, x, y, true, true);
         // Pooled enemy: it may have been killed while slowed down or accelerated
         this.setTimeScale(1);
-        this.setScale(1);
+        this._baseScale = type.scale ?? 1;
+        this.setScale(this._baseScale);
+        // The circle radius is used for collisions but is not rescaled with the sprite: do it here
+        this.arcadeBody.radius = this._bodyRadius * this._baseScale;
         this._hasEntered = false;
         this._strafeSide = Phaser.Math.Between(0, 1) === 0 ? -1 : 1;
 
@@ -116,6 +123,7 @@ export default class Enemy extends Entity {
         const width: number = this.frame.realWidth;
         const height: number = this.frame.realHeight;
         const radius: number = Math.min(width, height) / 2 * type.bodyRadiusRatio;
+        this._bodyRadius = radius;
         this.arcadeBody.setCircle(radius, width / 2 - radius, height / 2 - radius);
 
         this.getComponent(Movement)?.setSpeed(type.speed);
@@ -148,11 +156,11 @@ export default class Enemy extends Entity {
             // Quick "inflation": the shot leaves at its peak
             this.scene.tweens.add({
                 targets: this,
-                scale: 1.2,
+                scale: this._baseScale * 1.2,
                 duration: 120,
                 yoyo: true,
                 onYoyo: () => this.fire(),
-                onComplete: () => this.setScale(1)
+                onComplete: () => this.setScale(this._baseScale)
             });
         }
     }

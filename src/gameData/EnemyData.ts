@@ -19,6 +19,7 @@ export type EnemyData = {
     frame: string;
     // Added to the rotation toward the target: 0 for a sprite that faces right, Math.PI / 2 for one that faces up
     rotationOffset: number;
+    scale?: number;                 // display scale of the sprite (1 by default). The body follows it
     bodyRadiusRatio: number;        // circle body radius, relative to half of the smallest side of the frame (0.5 = full)
     health: number;
     speed: number;                  // px/ms (cf. Movement)

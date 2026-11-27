@@ -27,6 +27,7 @@ export const GUNNER: EnemyData = {
     atlas: 'enemies',
     frame: 'enemy7',
     rotationOffset: Math.PI / 2,
+    scale: 1.5,
     bodyRadiusRatio: 0.45,
     health: 2,
     speed: 0.22,

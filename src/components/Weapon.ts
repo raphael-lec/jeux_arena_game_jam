@@ -32,7 +32,9 @@ export default class Weapon implements IComponent {
             // Get forward vector of the source entity
             const sourceForward: Phaser.Math.Vector2 = direction ?? new Phaser.Math.Vector2(1, 0).rotate(source.rotation);
             const bulletVelocity: Phaser.Math.Vector2 = sourceForward.clone().scale(this._bulletData.speed);
-            bullet.enable(source.x + sourceForward.x * source.arcadeBody.radius, source.y + sourceForward.y * source.arcadeBody.radius,
+            // halfWidth follows the sprite scale (body.radius does not): the bullet leaves from the edge of a scaled entity
+            const spawnDistance: number = source.arcadeBody.halfWidth;
+            bullet.enable(source.x + sourceForward.x * spawnDistance, source.y + sourceForward.y * spawnDistance,
                 bulletVelocity.x, bulletVelocity.y, this._bulletData);
 
             // Maths way
