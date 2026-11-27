@@ -21,6 +21,8 @@ export default class Player extends Entity {
 
     private readonly _cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
     private _playerShipData: PlayerShipData;
+    // Added to the heading: 0 for a sprite that faces right, Math.PI / 2 for one that faces up
+    private _rotationOffset: number = 0;
     private _rateOfFire: number;
     // 1 = normal fire rate, 2 = twice as many shots per second (ammospeed bonus)
     private _fireRateMultiplier: number = 1;
@@ -33,7 +35,7 @@ export default class Player extends Entity {
     private _targets: Phaser.Physics.Arcade.Group;
 
     constructor(scene: Scene, x: number, y: number) {
-        super(scene, x, y, 'sprites');
+        super(scene, x, y, 'ships', 'ship0');
 
         if (this.scene.input.keyboard) {
             this._cursorKeys = this.scene.input.keyboard.createCursorKeys();
@@ -49,9 +51,10 @@ export default class Player extends Entity {
         this.addComponent(new Movement());
         this.addComponent(new Weapon(bulletsGroup, this._bulletData));
 
-        this.angle = -90;
-
         this.selectPlayerShip(1);
+
+        // Faces up at the start
+        this.rotation = -Math.PI / 2 + this._rotationOffset;
 
         this._rateOfFire = 0.5;
         this._lastShotTime = 0;
@@ -69,13 +72,26 @@ export default class Player extends Entity {
 
     public selectPlayerShip(playerShipDataId: number) {
         const playerShipsData = this.scene.cache.json.get('playerShips') as PlayerShipsData;
-        this._playerShipData = playerShipsData[playerShipDataId];
+        const data: PlayerShipData = playerShipsData[playerShipDataId];
+        this._playerShipData = data;
 
-        this.setTexture('sprites', this._playerShipData.texture);
-        const bodyData = this._playerShipData.body;
-        this.arcadeBody.setCircle(bodyData.radius, bodyData.offsetX, bodyData.offsetY);
+        // Keep the current heading when the rotation offset changes
+        const heading: number = this.rotation - this._rotationOffset;
+        this._rotationOffset = data.rotationOffset;
+        this.rotation = heading + this._rotationOffset;
 
-        this.getComponent(Movement)?.setSpeed(this._playerShipData.movementSpeed);
+        this.setTexture(data.atlas, data.texture);
+        this.setScale(data.scale);
+
+        // Circle centered on the frame. Values are in unscaled texture pixels, but Arcade does not
+        // scale a circle radius with the sprite: do it here (same as Enemy)
+        const width: number = this.frame.realWidth;
+        const height: number = this.frame.realHeight;
+        const radius: number = Math.min(width, height) / 2 * data.bodyRadiusRatio;
+        this.arcadeBody.setCircle(radius, width / 2 - radius, height / 2 - radius);
+        this.arcadeBody.radius = radius * data.scale;
+
+        this.getComponent(Movement)?.setSpeed(data.movementSpeed);
     }
 
     public setFireRateMultiplier(multiplier: number) {
@@ -105,12 +121,13 @@ export default class Player extends Entity {
             this.getComponent(Movement)?.move(this, this._moveDirection, deltaTime);
 
             // Face the move direction
-            this.rotation = this._moveDirection.angle();
+            this.rotation = this._moveDirection.angle() + this._rotationOffset;
         }
 
         // Stop player from leaving the arena
-        this.x = Phaser.Math.Clamp(this.x, this.displayWidth / 2, GameConstants.ARENA_WIDTH - this.displayWidth / 2);
-        this.y = Phaser.Math.Clamp(this.y, this.displayHeight / 2, GameConstants.ARENA_HEIGHT - this.displayHeight / 2);
+        const margin: number = this.arcadeBody.halfWidth;
+        this.x = Phaser.Math.Clamp(this.x, margin, GameConstants.ARENA_WIDTH - margin);
+        this.y = Phaser.Math.Clamp(this.y, margin, GameConstants.ARENA_HEIGHT - margin);
 
         // Shoot automatically at the nearest enemy. The fire rate follows the time scale and the fire rate bonus
         if (timeSinceLaunch - this._lastShotTime > this._rateOfFire * 1000 / (this.timeScale * this._fireRateMultiplier)) {

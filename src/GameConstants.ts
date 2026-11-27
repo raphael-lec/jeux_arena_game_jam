@@ -7,6 +7,7 @@ export default class GameConstants {
 
     public static readonly SceneKeys = Object.freeze({
         HOME: "HomeScene",
+        SHOP: "ShopScene",
         MAIN_GAME: "MainGameScene",
         MAIN_UI: "MainUIScene",
         GAME_OVER: "GameOverScene",

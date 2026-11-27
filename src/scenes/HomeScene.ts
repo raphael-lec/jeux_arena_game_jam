@@ -2,8 +2,12 @@ import {Loader} from "phaser";
 import GameConstants from "../GameConstants.ts";
 import BlackHole from "../entities/BlackHole.ts";
 import SolarFlare from "../entities/SolarFlare.ts";
+import UIButton from "../utils/UIButton.ts";
 
 export default class HomeScene extends Phaser.Scene {
+    // Avoids launching the game twice (SPACE and a click in the same frame)
+    private _starting: boolean = false;
+
     constructor() {
         super(GameConstants.SceneKeys.HOME);
     }
@@ -35,6 +39,10 @@ export default class HomeScene extends Phaser.Scene {
         this.load.image('bg', 'Backgrounds/darkPurple.png');
         this.load.image('planet', 'Planets/planet00.png');
         this.load.atlas('sprites', 'Spritesheet/gameSprites.png', 'Spritesheet/gameSprites.json');
+        // Player ships atlas: ship0 ... ship26 (cf. playerShips.json)
+        this.load.atlas('ships', 'Spritesheet/vaisseau.png', 'Spritesheet/vaisseau.json');
+        // Base enemies atlas: baseEnemy0 ... baseEnemy2 (cf. EnemyTypes)
+        this.load.atlas('baseenemies', 'Spritesheet/baseenemi.png', 'Spritesheet/baseenemi.json');
         // Enemies atlas: enemy0 ... enemy9 (cf. EnemyTypes)
         this.load.atlas('enemies', 'Spritesheet/enemysprite.png', 'Spritesheet/enemies.json');
         for (let i: number = 0; i < GameConstants.ASTEROID_TEXTURE_COUNT; i++) {
@@ -65,20 +73,38 @@ export default class HomeScene extends Phaser.Scene {
     }
 
     create() {
-        this.add.text(this.scale.width / 2, this.scale.width / 2, 'CODA SHMUP',
-            {fontSize: '72px', color: '#fff', fontFamily: 'future'}).setOrigin(0.5);
-        this.add.text(this.scale.width / 2, this.scale.width / 2 + 72, 'Press SPACE to start',
-            {fontSize: '32px', color: '#fff'}).setOrigin(0.5);
+        this._starting = false;
+
+        const centerX: number = this.scale.width / 2;
+        const height: number = this.scale.height;
+
+        this.add.text(centerX, height * 0.28, 'CODA SHMUP',
+            {fontSize: '96px', color: '#fff', fontFamily: 'future'}).setOrigin(0.5);
+
+        UIButton.create(this, centerX, height * 0.5, 'JOUER', () => this.startGame());
+        UIButton.create(this, centerX, height * 0.5 + 180, 'BOUTIQUE',
+            () => this.scene.start(GameConstants.SceneKeys.SHOP));
+
+        this.add.text(centerX, height * 0.5 + 400, 'ESPACE pour jouer',
+            {fontSize: '32px', color: '#aaaaaa'}).setOrigin(0.5);
 
         // Ignore the OS key repeat: SPACE may still be held from the previous game
         this.input.keyboard?.on('keydown-SPACE', (event: KeyboardEvent) => {
             if (event.repeat)
                 return;
 
-            this.scene.launch(GameConstants.SceneKeys.MAIN_UI);
-            this.scene.start(GameConstants.SceneKeys.MAIN_GAME);
+            this.startGame();
         });
 
         console.log("HomeScene created");
+    }
+
+    private startGame() {
+        if (this._starting)
+            return;
+        this._starting = true;
+
+        this.scene.launch(GameConstants.SceneKeys.MAIN_UI);
+        this.scene.start(GameConstants.SceneKeys.MAIN_GAME);
     }
 }

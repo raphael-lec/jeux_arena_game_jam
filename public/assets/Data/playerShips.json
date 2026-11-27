@@ -1,29 +1,5 @@
 {
-  "1": {
-    "movementSpeed": 0.6,
-    "texture": "playerShip1_blue",
-    "body": {
-      "radius": 42,
-      "offsetX": -4,
-      "offsetY": 16
-    }
-  },
-  "2": {
-    "movementSpeed": 0.9,
-    "texture": "playerShip2_blue",
-    "body": {
-      "radius": 42,
-      "offsetX": -4,
-      "offsetY": 16
-    }
-  },
-  "3": {
-    "movementSpeed": 1.2,
-    "texture": "playerShip3_blue",
-    "body": {
-      "radius": 42,
-      "offsetX": -4,
-      "offsetY": 16
-    }
-  }
+  "1": { "movementSpeed": 0.4, "atlas": "ships", "texture": "ship0",  "scale": 0.5, "rotationOffset": 1.5708, "bodyRadiusRatio": 0.8 },
+  "2": { "movementSpeed": 0.6, "atlas": "ships", "texture": "ship9",  "scale": 0.5, "rotationOffset": 1.5708, "bodyRadiusRatio": 0.8 },
+  "3": { "movementSpeed": 1.0, "atlas": "ships", "texture": "ship18", "scale": 0.5, "rotationOffset": 1.5708, "bodyRadiusRatio": 0.8 }
 }
