@@ -3,6 +3,8 @@ import Health from "../components/Health.ts";
 import Bullet from "../entities/Bullet.ts";
 import Enemy from "../entities/Enemy.ts";
 import Player from "../entities/Player.ts";
+import type {EnemyData} from "../gameData/EnemyData.ts";
+import {ENEMY_TYPES} from "../gameData/EnemyTypes.ts";
 import GroupUtils from "../utils/GroupUtils.ts";
 import GameConstants from "../GameConstants.ts";
 import RegistryConstants from "../RegistryConstants.ts";
@@ -136,6 +138,11 @@ export default class EntityManager extends Plugins.ScenePlugin {
             return;
         }
 
+        const type: EnemyData | undefined = this.pickEnemyType();
+        if (!type) {
+            return;
+        }
+
         const enemy = this._enemies.get() as Enemy;
         if (!enemy) {
             return;
@@ -146,10 +153,34 @@ export default class EntityManager extends Plugins.ScenePlugin {
         const view = this.scene!.cameras.main.worldView;
         const spawnRadius = Phaser.Math.Distance.Between(view.centerX, view.centerY, view.right, view.top) + 128;
         Phaser.Math.RandomXY(this._spawnOffset, spawnRadius);
-        enemy.enable(view.centerX + this._spawnOffset.x, view.centerY + this._spawnOffset.y);
+        enemy.enable(view.centerX + this._spawnOffset.x, view.centerY + this._spawnOffset.y, type);
 
         this.game!.events.emit(GameConstants.Events.ENEMY_SPAWNED_EVENT, enemy);
 
-        console.log("[EntityManager] Enemy spawned");
+        console.log("[EntityManager] Enemy spawned", type.name);
+    }
+
+    // Random enemy type among the ones that can spawn now: the game lasts long enough, and not too many are alive.
+    // The weight of a type is its chance relative to the others
+    private pickEnemyType(): EnemyData | undefined {
+        const elapsedSeconds: number = (this.scene!.time.now - this._gameStartTime) / 1000;
+        const candidates: EnemyData[] = ENEMY_TYPES.filter(type =>
+            elapsedSeconds >= type.spawnAfter && this.countActive(type) < type.maxActive);
+        if (candidates.length === 0)
+            return undefined;
+
+        const totalWeight: number = candidates.reduce((sum, type) => sum + type.weight, 0);
+        let roll: number = Phaser.Math.FloatBetween(0, totalWeight);
+        for (const type of candidates) {
+            roll -= type.weight;
+            if (roll <= 0)
+                return type;
+        }
+
+        return candidates[candidates.length - 1];
+    }
+
+    private countActive(type: EnemyData): number {
+        return this._enemies.getChildren().filter(child => child.active && (child as Enemy).enemyType === type).length;
     }
 }
