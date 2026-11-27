@@ -1,10 +1,12 @@
 import {Scene, Physics, GameObjects} from 'phaser';
 import IComponent from "../components/IComponent.ts";
+import ITimeScalable from "../components/ITimeScalable.ts";
 
-export default class Entity extends Physics.Arcade.Sprite {
+export default class Entity extends Physics.Arcade.Sprite implements ITimeScalable {
     public readonly arcadeBody: Physics.Arcade.Body;
     private _components: IComponent[] = [];
     private _forwardDebugLine: GameObjects.Line;
+    private _timeScale: number = 1;
 
     constructor(scene: Scene, x: number, y: number, texture: string, frame?: string) {
         super(scene, x, y, texture, frame);
@@ -20,6 +22,15 @@ export default class Entity extends Physics.Arcade.Sprite {
         this.arcadeBody = this.body as Physics.Arcade.Body;
         this.arcadeBody.allowGravity = false;
         this.arcadeBody.setFriction(0, 0);
+    }
+
+    public get timeScale(): number {
+        return this._timeScale;
+    }
+
+    // Subclasses moving with the physics velocity (Asteroid) override this to rescale it
+    public setTimeScale(scale: number): void {
+        this._timeScale = scale;
     }
 
     public addComponent(component: IComponent) {

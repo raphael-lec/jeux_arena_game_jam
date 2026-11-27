@@ -1,5 +1,7 @@
 import {Loader} from "phaser";
 import GameConstants from "../GameConstants.ts";
+import BlackHole from "../entities/BlackHole.ts";
+import SolarFlare from "../entities/SolarFlare.ts";
 
 export default class HomeScene extends Phaser.Scene {
     constructor() {
@@ -33,6 +35,26 @@ export default class HomeScene extends Phaser.Scene {
         this.load.image('bg', 'Backgrounds/darkPurple.png');
         this.load.image('planet', 'Planets/planet00.png');
         this.load.atlas('sprites', 'Spritesheet/gameSprites.png', 'Spritesheet/gameSprites.json');
+        for (let i: number = 0; i < GameConstants.ASTEROID_TEXTURE_COUNT; i++) {
+            const key: string = GameConstants.ASTEROID_TEXTURE_PREFIX + i;
+            this.load.image(key, 'Asteroids/' + key + '.png');
+        }
+        for (const type of ['slow', 'fast']) {
+            this.load.image('timefield_' + type, 'TimeFields/timefield_' + type + '.png');
+            this.load.image('timefield_icon_' + type, 'TimeFields/timefield_icon_' + type + '.png');
+        }
+        // Bonuses: texture key is 'bonus_' + type (cf. BonusManager)
+        this.load.image('bonus_kill_all', 'Bonus/kill_all.png');
+        this.load.image('bonus_heal', 'Bonus/heal.png');
+        this.load.image('bonus_ammospeed', 'Bonus/ammospeed.png');
+        this.load.image('bonus_triple_shot', 'Bonus/triple_shot.png');
+        // Black hole: 3 growth stages, texture key is 'blackhole_' + stage (cf. BlackHole)
+        for (let i: number = 0; i < BlackHole.TEXTURE_COUNT; i++) {
+            const key: string = BlackHole.TEXTURE_PREFIX + i;
+            this.load.image(key, 'BlackHoles/' + key + '.png');
+        }
+        // Solar flare: texture key is SolarFlare.TEXTURE_KEY (cf. SolarFlare)
+        this.load.image(SolarFlare.TEXTURE_KEY, 'SolarFlares/eruptionsolaire.png');
         this.load.bitmapFont('future-bmp', 'Fonts/kenvector_future.png', 'Fonts/kenvector_future.xml');
         this.load.font('future', 'Fonts/kenvector_future.ttf');
         this.load.json('playerShips', 'Data/playerShips.json');
